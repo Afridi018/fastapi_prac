@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, File, UploadFile
 from . import models, schemas
 
 
@@ -10,6 +10,10 @@ from . import hashing
 
 
 from blog.users.routes import router as user_router
+
+
+from fastapi.staticfiles import StaticFiles
+import os, shutil
 
 
 
@@ -76,3 +80,25 @@ app.include_router(user_router)
 @app.get("/")
 def test():
     return "hello world"
+
+
+
+
+
+UPLOAD_DIR = "uploaded_images"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Mount the static directory to serve images via URL
+app.mount("/images", StaticFiles(directory=UPLOAD_DIR), name="images")
+
+@app.post("/upload-image/")
+async def upload_image(image: UploadFile = File(...)):
+    if not image.content_type.startswith("image/"):
+        return {"error": "File is not an image."}
+
+    file_path = os.path.join(UPLOAD_DIR, image.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+
+    image_url = f"/images/{image.filename}"
+    return {"filename": image.filename, "url": image_url}
