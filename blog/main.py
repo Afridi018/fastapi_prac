@@ -101,4 +101,4 @@ async def upload_image(image: UploadFile = File(...)):
         shutil.copyfileobj(image.file, buffer)
 
     image_url = f"/images/{image.filename}"
-    return {"filename": image.filename, "url": image_url}
+    return {"filename": image.filename, "url": f"http://127.0.0.1:8000{image_url}"}
